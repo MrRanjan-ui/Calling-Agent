@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { PhoneIncoming, PhoneOutgoing, Trash2, RefreshCw, Bot } from "lucide-react";
+import { PhoneIncoming, PhoneOutgoing, Trash2, RefreshCw, Bot, Headphones } from "lucide-react";
 import { toast } from "sonner";
 import { api, BACKEND_URL, fmtDate, fmtDuration, STATUS_COLORS } from "../lib/api";
 import { Badge } from "../components/ui/badge";
@@ -49,6 +49,7 @@ export default function Calls() {
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="inbound">Inbound</SelectItem>
               <SelectItem value="outbound">Outbound</SelectItem>
+              <SelectItem value="web">Web test</SelectItem>
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={setStatus}>
@@ -79,8 +80,8 @@ export default function Calls() {
             )}
             {calls.map((c) => (
               <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onClick={() => openDetail(c.id)} data-testid={`call-row-${c.id}`}>
-                <td className="px-4 py-3">{c.direction === "inbound" ? <PhoneIncoming size={14} className="text-green-600" /> : <PhoneOutgoing size={14} className="text-[#002FA7]" />}</td>
-                <td className="px-4 py-3 font-mono text-xs">{c.direction === "inbound" ? c.from_number : c.to_number}</td>
+                <td className="px-4 py-3">{c.direction === "inbound" ? <PhoneIncoming size={14} className="text-green-600" /> : c.direction === "web" ? <Headphones size={14} className="text-purple-600" /> : <PhoneOutgoing size={14} className="text-[#002FA7]" />}</td>
+                <td className="px-4 py-3 font-mono text-xs">{c.direction === "inbound" ? c.from_number : c.direction === "web" ? "browser test" : c.to_number}</td>
                 <td className="px-4 py-3 text-zinc-600">{c.persona_name || "—"}</td>
                 <td className="px-4 py-3"><Badge className={`rounded-sm border text-[10px] ${STATUS_COLORS[c.status] || STATUS_COLORS.initiated}`}>{c.status}</Badge></td>
                 <td className="px-4 py-3 text-xs text-zinc-600 max-w-[180px] truncate">{c.outcome || "—"}</td>

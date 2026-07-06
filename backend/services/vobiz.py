@@ -49,10 +49,11 @@ async def hangup_call(call_uuid: str) -> bool:
 
 
 def stream_xml(ws_url: str, greeting: str = "") -> str:
-    speak = f"\n  <Speak>{greeting}</Speak>" if greeting else ""
+    from xml.sax.saxutils import escape
+    speak = f"\n  <Speak>{escape(greeting)}</Speak>" if greeting else ""
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>{speak}
   <Stream bidirectional="true" keepCallAlive="true" audioTrack="inbound" contentType="audio/x-l16;rate=16000">
-    {ws_url}
+    {escape(ws_url)}
   </Stream>
 </Response>"""

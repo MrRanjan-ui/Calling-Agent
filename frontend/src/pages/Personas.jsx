@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Star, Mic } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, Mic, Headphones } from "lucide-react";
 import { api } from "../lib/api";
+import WebCallDialog from "../components/WebCallDialog";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -24,6 +25,7 @@ export default function Personas() {
   const [kbs, setKbs] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
+  const [testPersona, setTestPersona] = useState(null);
 
   const load = () => {
     api.get("/personas").then((r) => setPersonas(r.data));
@@ -99,9 +101,15 @@ export default function Personas() {
               <Badge className="rounded-sm border border-slate-200 bg-slate-50 text-zinc-700 text-[10px]">{p.language_hint}</Badge>
               <Badge className="rounded-sm border border-slate-200 bg-slate-50 text-zinc-700 text-[10px]">{(p.enabled_tools || []).length} tools</Badge>
             </div>
+            <Button variant="outline" size="sm" onClick={() => setTestPersona(p)}
+              className="mt-4 w-full rounded-sm border-[#002FA7] text-[#002FA7] hover:bg-blue-50 hover:text-[#002080]" data-testid={`test-persona-${p.id}`}>
+              <Headphones size={13} className="mr-1.5" /> Test in Browser
+            </Button>
           </div>
         ))}
       </div>
+
+      <WebCallDialog persona={testPersona} open={!!testPersona} onClose={() => setTestPersona(null)} />
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="rounded-sm max-w-2xl max-h-[88vh] overflow-y-auto" data-testid="persona-editor-dialog">

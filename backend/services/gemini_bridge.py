@@ -126,7 +126,7 @@ async def handle_telephony_stream(ws: WebSocket):
         "tools": [{"function_declarations": decls}] if decls else [],
     }
 
-    client = genai.Client(api_key=settings["gemini_api_key"], http_options={"headers": {"User-Agent": "aistudio-build"}})
+    client = genai.Client(api_key=settings["gemini_api_key"])
     model = settings.get("gemini_model", "gemini-3.1-flash-live-preview")
     logger.info(f"[Bridge] Call {call_id}: connecting Gemini Live model={model} persona={persona['name']} voice={persona.get('voice')}")
 
@@ -281,3 +281,146 @@ async def _finalize_call(call_id, call, recorder, transcript, tool_records, stat
         from services.summary import generate_call_summary
         asyncio.create_task(generate_call_summary(call_id))
     logger.info(f"[Bridge] Call {call_id} finalized ({upd['status']}, {duration}s, {len(transcript)} transcript lines)")
+
+
+async def handle_browser_stream(ws: WebSocket):
+    """Browser test-call: mic PCM16@16kHz in, Gemini audio (24kHz) + transcripts out. No telephony cost."""
+    await ws.accept()
+    persona_id = ws.query_params.get("persona_id") or ""
+    settings = await get_settings()
+    from services.call_service import resolve_persona
+    persona = await resolve_persona(persona_id)
+    if not persona or not settings.get("gemini_api_key"):
+        await ws.send_text(json.dumps({"event": "error", "message": "Persona or Gemini API key not configured"}))
+        await ws.close()
+        return
+
+    from models import CallLog
+    log = CallLog(persona_id=persona["id"], persona_name=persona["name"], direction="web",
+                  from_number="browser-test", status="in-progress")
+    call_id = log.id
+    await db.call_logs.insert_one(log.model_dump())
+
+    instruction = await _build_instruction(persona, None, "browser test call", settings)
+    decls = await build_function_declarations(persona.get("enabled_tools") or [])
+    ctx = {"call_id": call_id, "contact_id": "", "from_number": "", "persona": persona, "direction": "web"}
+    executor = ToolExecutor(ctx)
+    recorder = CallRecorder()
+    transcript = []
+    tool_records = []
+    state = {"connected_at": None, "closing": False}
+
+    config = {
+        "response_modalities": ["AUDIO"],
+        "speech_config": {"voice_config": {"prebuilt_voice_config": {"voice_name": persona.get("voice", "Kore")}}},
+        "system_instruction": instruction,
+        "temperature": persona.get("temperature", 0.7),
+        "input_audio_transcription": {},
+        "output_audio_transcription": {},
+        "tools": [{"function_declarations": decls}] if decls else [],
+    }
+    client = genai.Client(api_key=settings["gemini_api_key"])
+    model = settings.get("gemini_model", "gemini-3.1-flash-live-preview")
+    logger.info(f"[WebCall] {call_id}: connecting Gemini Live persona={persona['name']}")
+
+    async def delayed_close(delay=6):
+        await asyncio.sleep(delay)
+        try:
+            await ws.close()
+        except Exception:
+            pass
+
+    try:
+        async with client.aio.live.connect(model=model, config=config) as session:
+            state["connected_at"] = time.time() * 1000
+            await ws.send_text(json.dumps({"event": "ready", "call_id": call_id}))
+            greeting = persona.get("initial_greeting") or "Hello!"
+            await session.send_client_content(
+                turns=types.Content(role="user", parts=[types.Part(
+                    text=f"The call just connected (browser test call). Greet the caller using your initial greeting: \"{greeting}\"")]),
+                turn_complete=True)
+
+            async def pump_browser():
+                while True:
+                    try:
+                        raw = await ws.receive_text()
+                    except WebSocketDisconnect:
+                        return
+                    try:
+                        data = json.loads(raw)
+                    except Exception:
+                        continue
+                    ev = data.get("event")
+                    if ev == "media" and data.get("payload"):
+                        pcm = b64_to_pcm(data["payload"])
+                        recorder.add(time.time() * 1000, pcm)
+                        await session.send_realtime_input(
+                            audio=types.Blob(data=pcm.astype("<i2").tobytes(), mime_type="audio/pcm;rate=16000"))
+                    elif ev == "stop":
+                        return
+
+            async def pump_gemini():
+                while True:
+                    async for msg in session.receive():
+                        tc = getattr(msg, "tool_call", None)
+                        if tc and tc.function_calls:
+                            responses = []
+                            for fc in tc.function_calls:
+                                args = dict(fc.args or {})
+                                result = await executor.execute(fc.name, args)
+                                tool_records.append({"name": fc.name, "args": args, "result": result, "timestamp": now_iso()})
+                                try:
+                                    await ws.send_text(json.dumps({"event": "tool", "name": fc.name, "args": args}))
+                                except Exception:
+                                    return
+                                responses.append(types.FunctionResponse(id=fc.id, name=fc.name, response=result if isinstance(result, dict) else {"output": result}))
+                            await session.send_tool_response(function_responses=responses)
+                            if executor.end_call_requested:
+                                asyncio.create_task(delayed_close(6))
+                            continue
+                        sc = getattr(msg, "server_content", None)
+                        if not sc:
+                            continue
+                        try:
+                            if sc.interrupted:
+                                await ws.send_text(json.dumps({"event": "interrupted"}))
+                            if sc.output_transcription and sc.output_transcription.text:
+                                t = sc.output_transcription.text
+                                transcript.append({"role": "agent", "text": t, "timestamp": now_iso()})
+                                await ws.send_text(json.dumps({"event": "transcript", "role": "agent", "text": t}))
+                            if sc.input_transcription and sc.input_transcription.text:
+                                t = sc.input_transcription.text
+                                transcript.append({"role": "user", "text": t, "timestamp": now_iso()})
+                                await ws.send_text(json.dumps({"event": "transcript", "role": "user", "text": t}))
+                            if sc.model_turn and sc.model_turn.parts:
+                                for part in sc.model_turn.parts:
+                                    if part.inline_data and part.inline_data.data:
+                                        pcm24 = np.frombuffer(part.inline_data.data, dtype="<i2")
+                                        recorder.add(time.time() * 1000, resample_pcm(pcm24, 24000, 16000))
+                                        await ws.send_text(json.dumps({
+                                            "event": "audio", "sampleRate": 24000, "payload": pcm_to_b64(pcm24)}))
+                        except (WebSocketDisconnect, RuntimeError):
+                            return
+
+            t1 = asyncio.create_task(pump_browser())
+            t2 = asyncio.create_task(pump_gemini())
+            done, pending = await asyncio.wait([t1, t2], return_when=asyncio.FIRST_COMPLETED)
+            for p in pending:
+                p.cancel()
+            for d in done:
+                exc = d.exception()
+                if exc and not isinstance(exc, (WebSocketDisconnect, asyncio.CancelledError)):
+                    logger.error(f"[WebCall] pump error: {exc}")
+    except Exception as e:
+        logger.error(f"[WebCall] Session error for {call_id}: {e}")
+        await db.call_logs.update_one({"id": call_id}, {"$set": {"status": "failed", "error": str(e)[:500]}})
+        try:
+            await ws.send_text(json.dumps({"event": "error", "message": str(e)[:300]}))
+        except Exception:
+            pass
+    finally:
+        try:
+            await ws.close()
+        except Exception:
+            pass
+        await _finalize_call(call_id, None, recorder, transcript, tool_records, state, ctx)

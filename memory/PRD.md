@@ -21,13 +21,18 @@ Rebuild the Hotel-receptionist GitHub codebase (Node/TS Gemini+Vobiz calling age
 - ✅ Full backend + frontend (Dashboard, Call Logs w/ transcript+recording+summary viewer, Personas editor, Campaigns, Contacts CRM, Pipelines kanban (HTML5 DnD), Knowledge Base (text/PDF/URL), n8n Tools builder w/ test, Settings)
 - ✅ Seeded: 3 personas (Riya receptionist / Arjun sales / Neha support), Sales Pipeline, 4 sample contacts
 - ✅ Testing: iteration_1 — backend 15/15 pass, frontend all flows pass
-- ⚠️ NOT live-verified: actual phone call audio bridge (needs real Vobiz call; ported 1:1 from working repo logic). Google Calendar needs client OAuth creds entered in Settings.
+
+## Session 2 (2026-06) — Bug fixes + Browser Test Call
+- ✅ FIXED outbound instant-hangup: two root causes — (1) Stream XML contained unescaped `&` in WS URL (invalid XML → Vobiz dropped call on answer); now escaped via xml.sax.saxutils.escape. (2) `User-Agent: aistudio-build` header (from old JS repo) breaks google-genai Python SDK live.connect ("no close frame received"); removed. Verified: valid XML + Gemini Live streams audio.
+- ✅ Browser Test Call: WS `/api/browser/stream` (mic PCM16@16k in, 24k audio + live transcript + tool events out, interruption handling) + WebCallDialog UI on persona cards ("Test in Browser"). Verified end-to-end via Python WS client: greeting audio (20 chunks), transcripts, recording WAV + AI summary saved as direction="web" call log.
+- ⚠️ Real PHONE call still needs user verification (both hangup causes now fixed; same code path as verified web call).
+- Google Calendar needs client OAuth creds entered in Settings.
 
 ## Vobiz inbound setup (manual step for user)
 Set on Vobiz number: Answer URL = `{PUBLIC_BASE_URL}/api/telephony/inbound` (POST), Hangup URL = `{PUBLIC_BASE_URL}/api/telephony/hangup`.
 
 ## Backlog
-- P0: Live call verification with real Vobiz number (inbound + outbound), tune barge-in/interruption handling
-- P1: Browser test-call (mic → Gemini) for persona preview without telephony cost; number-to-persona routing rules; IVR menu builder; call transfer via Vobiz mid-call API
+- P0: User re-test of real Vobiz phone call (inbound + outbound) after XML + SDK header fixes
+- P1: Number→persona routing rules; IVR menu builder; call transfer via Vobiz mid-call API
 - P1: Campaign analytics per-campaign report; CSV file upload for campaigns
-- P2: Multi-workspace auth (per-client login), wallet/credits tracking, webhooks-out on call events, callback auto-dial queue
+- P2: Multi-workspace/per-client login auth, wallet/credits tracking, webhooks-out on call events, callback auto-dial queue

@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from db import client as mongo_client
 from routes import telephony, calls, personas, campaigns, crm, knowledge, custom_tools, settings_routes, dashboard
-from services.gemini_bridge import handle_telephony_stream
+from services.gemini_bridge import handle_telephony_stream, handle_browser_stream
 from services.campaign_runner import campaign_loop
 from seed import seed
 
@@ -32,6 +32,11 @@ app.include_router(api)
 @app.websocket("/api/telephony/stream")
 async def telephony_stream(ws: WebSocket):
     await handle_telephony_stream(ws)
+
+
+@app.websocket("/api/browser/stream")
+async def browser_stream(ws: WebSocket):
+    await handle_browser_stream(ws)
 
 
 app.add_middleware(
