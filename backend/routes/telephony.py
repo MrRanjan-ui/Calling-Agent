@@ -23,6 +23,9 @@ async def inbound_call(request: Request):
     persona = await resolve_persona(params.get("persona_id", ""))
     settings = await get_settings()
 
+    if not from_number:
+        return Response(content=vobiz.stream_xml(""), media_type="text/xml")
+
     log = CallLog(persona_id=(persona or {}).get("id", ""), persona_name=(persona or {}).get("name", ""),
                   direction="inbound", from_number=from_number, status="ringing")
     await db.call_logs.insert_one(log.model_dump())
