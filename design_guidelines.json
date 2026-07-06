@@ -1,0 +1,108 @@
+{
+  "theme": "light",
+  "archetype": "Swiss & High-Contrast (Archetype 4)",
+  "typography": {
+    "headings": {
+      "font": "Satoshi, sans-serif",
+      "weight": "font-bold or font-black",
+      "classes": "tracking-tight text-zinc-950"
+    },
+    "body": {
+      "font": "IBM Plex Sans, sans-serif",
+      "classes": "text-zinc-800 leading-relaxed"
+    },
+    "data_and_code": {
+      "font": "IBM Plex Mono, monospace",
+      "classes": "text-zinc-900 tracking-tight"
+    },
+    "scale": {
+      "h1": "text-3xl sm:text-4xl",
+      "h2": "text-2xl sm:text-3xl",
+      "h3": "text-xl",
+      "body": "text-sm sm:text-base",
+      "small": "text-xs uppercase tracking-[0.2em]"
+    }
+  },
+  "colors": {
+    "backgrounds": {
+      "primary": "bg-white",
+      "secondary": "bg-slate-50",
+      "tertiary": "bg-zinc-100"
+    },
+    "text": {
+      "primary": "text-zinc-950",
+      "secondary": "text-zinc-500",
+      "accent": "text-[#002FA7]"
+    },
+    "actions": {
+      "primary": "bg-[#002FA7] text-white hover:bg-[#002080]",
+      "destructive": "bg-[#FF3333] text-white hover:bg-[#CC0000]",
+      "outline": "border border-zinc-200 bg-transparent text-zinc-950 hover:bg-zinc-50"
+    },
+    "status": {
+      "success": "bg-green-100 text-green-800 border-green-200",
+      "warning": "bg-yellow-100 text-yellow-800 border-yellow-200",
+      "error": "bg-red-100 text-red-800 border-red-200",
+      "neutral": "bg-slate-100 text-slate-800 border-slate-200"
+    },
+    "borders": {
+      "default": "border-slate-200",
+      "focus": "focus:ring-2 focus:ring-[#002FA7] focus:ring-offset-2"
+    }
+  },
+  "layout_and_spacing": {
+    "page_structure": "Left vertical sidebar (w-64, border-r, bg-slate-50). Top header for breadcrumbs and global actions (h-16, border-b, bg-white). Main scrollable content area.",
+    "grid_system": "Control Room grid: Base grid-cols-1 md:grid-cols-3 lg:grid-cols-4 with gap-4 or gap-6.",
+    "cards": "Flat design. NO soft shadows. Use border-slate-200. rounded-sm or rounded-none. h-full for grid items.",
+    "kanban": "Horizontal flex container with gap-6. Columns are w-80 shrink-0 bg-slate-50 p-4 rounded-sm. Cards inside are bg-white border border-slate-200 p-4."
+  },
+  "components": {
+    "buttons": "Sharp edges (rounded-sm). High contrast.",
+    "tables": "Dense. text-sm. Hover states on rows (hover:bg-slate-50). Border-collapse.",
+    "forms": "Inputs use rounded-sm, border-slate-200. Focus rings must use primary color (#002FA7). Labels are uppercase tracking-wider text-xs font-semibold text-zinc-500.",
+    "badges": "Square or rounded-sm, 1px border. No pill shapes.",
+    "dialogs": "backdrop-blur-sm bg-black/40. Modal itself is flat bg-white, 1px border, 0 shadow."
+  },
+  "icons_and_assets": {
+    "library": "lucide-react",
+    "style": "regular weight. Keep consistent.",
+    "media": [
+      {
+        "category": "user_headshots",
+        "description": "For CRM leads, contact table, or agent persona avatars",
+        "urls": [
+          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBkaXZlcnNlJTIwaGVhZHNob3RzJTIwcG9ydHJhaXRzfGVufDB8fHx8MTc4MzMzMjM2N3ww&ixlib=rb-4.1.0&q=85",
+          "https://images.unsplash.com/photo-1607503873903-c5e95f80d7b9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBkaXZlcnNlJTIwaGVhZHNob3RzJTIwcG9ydHJhaXRzfGVufDB8fHx8MTc4MzMzMjM2N3ww&ixlib=rb-4.1.0&q=85",
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBkaXZlcnNlJTIwaGVhZHNob3RzJTIwcG9ydHJhaXRzfGVufDB8fHx8MTc4MzMzMjM2N3ww&ixlib=rb-4.1.0&q=85",
+          "https://images.unsplash.com/photo-1609436132311-e4b0c9370469?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjBkaXZlcnNlJTIwaGVhZHNob3RzJTIwcG9ydHJhaXRzfGVufDB8fHx8MTc4MzMzMjM2N3ww&ixlib=rb-4.1.0&q=85"
+        ]
+      },
+      {
+        "category": "company_logos",
+        "description": "For client companies in CRM or knowledge base sources",
+        "urls": [
+          "https://images.unsplash.com/photo-1638864616270-64041b699a50?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjB0ZWNoJTIwY29tcGFueSUyMGxvZ28lMjBtaW5pbWFsJTIwdHJhbnNwYXJlbnR8ZW58MHx8fHwxNzgzMzMyMzkzfDA&ixlib=rb-4.1.0&q=85",
+          "https://images.unsplash.com/photo-1670299342628-f7f6b4beed1c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjB0ZWNoJTIwY29tcGFueSUyMGxvZ28lMjBtaW5pbWFsJTIwdHJhbnNwYXJlbnR8ZW58MHx8fHwxNzgzMzMyMzkzfDA&ixlib=rb-4.1.0&q=85"
+        ]
+      }
+    ]
+  },
+  "interactions_and_motion": {
+    "hover_states": "Must explicitly set hover text and bg colors. Lighter hue of active state. E.g., hover:bg-slate-50 hover:text-zinc-950.",
+    "transitions": "Fast and snappy. transition-all duration-150 ease-out.",
+    "focus": "All interactive elements MUST have focus states (focus:ring-2 focus:ring-[#002FA7] focus:outline-none)."
+  },
+  "accessibility_and_testing": {
+    "contrast": "Ensure minimum 4.5:1 ratio for normal text. Use APCA guidelines.",
+    "testing": "All interactive and key informational elements MUST include a `data-testid` attribute. Convention: kebab-case, role-based. e.g., data-testid='create-campaign-button'.",
+    "screen_readers": "Use aria-hidden='true' for decorative icons."
+  },
+  "instructions_to_main_agent": [
+    "Ensure all Shadcn components are modified to reflect the Swiss Brutalist/High-Contrast theme (remove roundness where possible, set rounded-sm max, remove heavy shadows, use flat borders).",
+    "Build the dashboard using a fixed left sidebar and scrolling main content area.",
+    "Implement real-time configurable UI. Use state management for Persona tools, CRM drag-and-drop, and n8n webhook configs.",
+    "Do not use generic placeholder images. Use the provided headshots for the CRM leads and Avatars.",
+    "Use pure HTML/Tailwind for structural complex layouts like Kanban boards, customizing Shadcn's basic elements within it.",
+    "Add 'data-testid' to ALL buttons, inputs, tabs, and critical UI elements."
+  ]
+}
