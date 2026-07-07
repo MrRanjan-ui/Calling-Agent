@@ -35,7 +35,12 @@ export default function Personas() {
   useEffect(load, []);
 
   const openEdit = (p) => {
-    setForm(p ? { ...p } : { ...EMPTY });
+    setForm(p ? { 
+      ...EMPTY, 
+      ...p,
+      enabled_tools: p.enabled_tools || [],
+      knowledge_base_ids: p.knowledge_base_ids || [],
+    } : { ...EMPTY });
     setEditing(p ? p.id : "new");
   };
 
@@ -59,10 +64,22 @@ export default function Personas() {
   };
 
   const toggleTool = (name) => {
-    setForm((f) => ({ ...f, enabled_tools: f.enabled_tools.includes(name) ? f.enabled_tools.filter((t) => t !== name) : [...f.enabled_tools, name] }));
+    setForm((f) => {
+      const tools = f.enabled_tools || [];
+      return {
+        ...f,
+        enabled_tools: tools.includes(name) ? tools.filter((t) => t !== name) : [...tools, name]
+      };
+    });
   };
   const toggleKb = (id) => {
-    setForm((f) => ({ ...f, knowledge_base_ids: f.knowledge_base_ids.includes(id) ? f.knowledge_base_ids.filter((k) => k !== id) : [...f.knowledge_base_ids, id] }));
+    setForm((f) => {
+      const kbs = f.knowledge_base_ids || [];
+      return {
+        ...f,
+        knowledge_base_ids: kbs.includes(id) ? kbs.filter((k) => k !== id) : [...kbs, id]
+      };
+    });
   };
 
   return (
@@ -161,7 +178,7 @@ export default function Personas() {
               <div className="mt-2 grid grid-cols-2 gap-1.5 border border-slate-200 rounded-sm p-3 max-h-48 overflow-y-auto">
                 {[...options.builtin_tools, ...options.custom_tools.map((t) => ({ ...t, custom: true }))].map((t) => (
                   <label key={t.name} className="flex items-start gap-2 text-xs cursor-pointer hover:bg-slate-50 p-1 rounded-sm">
-                    <Checkbox checked={form.enabled_tools.includes(t.name)} onCheckedChange={() => toggleTool(t.name)} data-testid={`tool-checkbox-${t.name}`} />
+                    <Checkbox checked={(form.enabled_tools || []).includes(t.name)} onCheckedChange={() => toggleTool(t.name)} data-testid={`tool-checkbox-${t.name}`} />
                     <span><span className="font-mono font-medium">{t.name}</span>{t.custom && <Badge className="ml-1 rounded-sm text-[9px] bg-purple-100 text-purple-800 border-purple-200 border">n8n</Badge>}</span>
                   </label>
                 ))}
@@ -173,7 +190,7 @@ export default function Personas() {
                 {kbs.length === 0 && <div className="text-xs text-zinc-400">No knowledge bases yet — create one in the Knowledge Base page</div>}
                 {kbs.map((kb) => (
                   <label key={kb.id} className="flex items-center gap-2 text-xs cursor-pointer">
-                    <Checkbox checked={form.knowledge_base_ids.includes(kb.id)} onCheckedChange={() => toggleKb(kb.id)} data-testid={`kb-checkbox-${kb.id}`} />
+                    <Checkbox checked={(form.knowledge_base_ids || []).includes(kb.id)} onCheckedChange={() => toggleKb(kb.id)} data-testid={`kb-checkbox-${kb.id}`} />
                     {kb.name} <span className="text-zinc-400">({(kb.documents || []).length} docs)</span>
                   </label>
                 ))}
