@@ -49,6 +49,66 @@ export default function Campaigns() {
     toast.success(`Imported ${r.data.length} CRM contacts`);
   };
 
+  const handleCsvUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result || "";
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      if (lines.length === 0) {
+        return toast.error("CSV file is empty");
+      }
+
+      let nameIdx = 0;
+      let phoneIdx = 1;
+      let hasHeader = false;
+
+      // Check if the first line is a header
+      const firstLine = lines[0].split(/[,\t;]/).map((col) => col.trim().toLowerCase());
+      const hasPhoneCol = firstLine.some((c) => c.includes("phone") || c.includes("number") || c.includes("mobile") || c.includes("tel"));
+      const hasNameCol = firstLine.some((c) => c.includes("name") || c.includes("first") || c.includes("last"));
+
+      if (hasPhoneCol || hasNameCol) {
+        hasHeader = true;
+        const phoneColIdx = firstLine.findIndex((c) => c.includes("phone") || c.includes("number") || c.includes("mobile") || c.includes("tel"));
+        const nameColIdx = firstLine.findIndex((c) => c.includes("name") || c.includes("first") || c.includes("last"));
+        
+        if (phoneColIdx !== -1) phoneIdx = phoneColIdx;
+        if (nameColIdx !== -1) nameIdx = nameColIdx;
+      }
+
+      const parsed = [];
+      const startRow = hasHeader ? 1 : 0;
+
+      for (let i = startRow; i < lines.length; i++) {
+        const row = lines[i].split(/[,\t;]/).map((col) => col.trim().replace(/^["']|["']$/g, ""));
+        if (row.length === 0) continue;
+
+        const phone = row[phoneIdx] || "";
+        const name = row[nameIdx] || (row.length === 1 ? "" : row[0] === phone ? "" : row[0]);
+
+        if (phone) {
+          parsed.push(`${name},${phone}`);
+        }
+      }
+
+      if (parsed.length === 0) {
+        toast.error("No valid phone numbers found in the CSV");
+      } else {
+        const joined = parsed.join("\n");
+        setForm((f) => ({
+          ...f,
+          contactsText: f.contactsText ? f.contactsText + "\n" + joined : joined
+        }));
+        toast.success(`Imported ${parsed.length} contacts from CSV`);
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  };
+
   const create = async () => {
     if (!form.name.trim()) return toast.error("Campaign name required");
     const contacts = form.contactsText.split("\n").map((l) => {
@@ -194,9 +254,15 @@ export default function Campaigns() {
             <div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs uppercase tracking-wider font-semibold text-zinc-500">Contacts — one per line: Name,Phone</Label>
-                <Button size="sm" variant="outline" className="rounded-sm h-7 text-xs" onClick={importCrm} data-testid="campaign-import-crm-button">
-                  <Upload size={12} className="mr-1" /> Import from CRM
-                </Button>
+                <div className="flex gap-2">
+                  <label className="flex items-center justify-center border border-slate-200 hover:bg-slate-50 text-zinc-700 h-7 px-2.5 rounded-sm text-xs cursor-pointer font-medium">
+                    <Upload size={12} className="mr-1.5" /> Upload CSV
+                    <input type="file" accept=".csv" onChange={handleCsvUpload} className="hidden" />
+                  </label>
+                  <Button size="sm" variant="outline" className="rounded-sm h-7 text-xs" onClick={importCrm} data-testid="campaign-import-crm-button">
+                    <Upload size={12} className="mr-1" /> Import from CRM
+                  </Button>
+                </div>
               </div>
               <Textarea rows={6} value={form.contactsText} onChange={(e) => setForm({ ...form, contactsText: e.target.value })}
                 placeholder={"Shruti Sharma,+919876543210\nRahul Verma,+919812345678"}
