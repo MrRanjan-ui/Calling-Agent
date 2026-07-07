@@ -12,6 +12,7 @@ router = APIRouter()
 
 
 @router.api_route("/telephony/inbound", methods=["GET", "POST"])
+@router.api_route("/vobiz/incoming-call", methods=["GET", "POST"])
 async def inbound_call(request: Request):
     params = dict(request.query_params)
     form = {}
@@ -48,6 +49,7 @@ async def outbound_answer(request: Request):
 
 
 @router.api_route("/telephony/hangup", methods=["GET", "POST"])
+@router.api_route("/vobiz/hangup", methods=["GET", "POST"])
 async def hangup_webhook(request: Request):
     params = dict(request.query_params)
     call_id = params.get("call_id", "")
